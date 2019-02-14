@@ -88,6 +88,19 @@ const processor = {
                                 tag.name = tag.name.replace('@', '');
                             });
                         }
+                        // Escape "argument content," i.e., multi-line string input to a step
+                        // This may contain code blocks OR Cucumber-style interpolated variables like <Column 1>
+                        if (child.steps) {
+                            child.steps.forEach(step => {
+                                if (step.argument && step.argument.content) {
+                                    step.argument.content = step.argument.content.trim()
+                                                                .replace(/&/g, "&amp;")
+                                                                .replace(/>/g, "&gt;")
+                                                                .replace(/</g, "&lt;")
+                                                                .replace(/"/g, "&quot;");
+                                }
+                            });
+                        }
                         let implementedStep = true;
                         // Find the steps in-code
                         child.steps.forEach(step => {
