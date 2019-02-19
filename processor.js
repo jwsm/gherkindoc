@@ -20,7 +20,7 @@ const processor = {
      */
     process: function(filename, outputDir, options) {
         processor.codeParser = new stepsParser.CodeParser(options ? options.steps : []);
-        const tree = processor.traverseDirectory(filename, outputDir, path.basename(filename));
+        const tree = processor.traverseDirectory(filename, outputDir, path.dirname(filename));
         processor.associateTags(processor.scenaria);
         tree.scenaria = processor.scenaria;
         tree.scenariaPerTag = processor.scenariaPerTag;
