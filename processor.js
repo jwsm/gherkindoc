@@ -20,7 +20,7 @@ const processor = {
      */
     process: function(filename, outputDir, options) {
         processor.codeParser = new stepsParser.CodeParser(options ? options.steps : []);
-        const tree = processor.traverseDirectory(filename, outputDir, path.dirname(filename));
+        const tree = processor.traverseDirectory(filename, outputDir, path.dirname(filename), options);
         processor.associateTags(processor.scenaria);
         tree.scenaria = processor.scenaria;
         tree.scenariaPerTag = processor.scenariaPerTag;
@@ -37,10 +37,12 @@ const processor = {
         return tree;
     },
 
-    createImplementedTag: function(obj, implemented) {
+    createImplementedTag: function(obj, implemented, options) {
         if (!obj.tags) { obj.tags = []; }
-        obj.tags.push({ type: 'Tag', location: { line: 0, column: 0 },
-            name: implemented ? 'Implemented' : 'Not Implemented' });
+        if (options.addImplementedTags) {
+            obj.tags.push({ type: 'Tag', location: { line: 0, column: 0 },
+                name: implemented ? 'Implemented' : 'Not Implemented' });
+        }
     },
 
     /**
@@ -49,15 +51,16 @@ const processor = {
      * @param {string} filename the directory to Traverse
      * @param {string} outputDir the directory where the results will be stored
      * @param {string} basename path.dirname(filename)
+     * @param {object} options the options to be referenced when processing files
      * @return {Object} treeNode
      */
-    traverseDirectory: function(filename, outputDir, basename) {
+    traverseDirectory: function(filename, outputDir, basename, options) {
         const stats = fs.lstatSync(filename);
         let treeNode = null;
 
         if (stats.isDirectory()) {
             const children = fs.readdirSync(filename).map(function(child) {
-                return processor.traverseDirectory(filename + '/' + child, outputDir, basename);
+                return processor.traverseDirectory(filename + '/' + child, outputDir, basename, options);
             });
             treeNode = {
                 path: filename,
@@ -112,10 +115,10 @@ const processor = {
                                 console.log('Unrecognized step type "' + step.type + '"');
                             }
                             if (!step.implementation.stepMatch) { implementedStep = false; }
-                            processor.createImplementedTag(step, implementedStep);
+                            processor.createImplementedTag(step, implementedStep, options);
                         }, this);
                         if (!implementedStep) { implementedFeature = false; }
-                        processor.createImplementedTag(child, implementedStep);
+                        processor.createImplementedTag(child, implementedStep, options);
                     });
                     /**
                      * If we add here a tag, all the scenarios will inherit it
